@@ -13,6 +13,9 @@ let stompClient = null;
 let nickname = null;
 let fullname = null;
 let selectedUserId = null;
+let currentUser = null;
+
+let selectedGroupId;
 
 function connect(event) {
     nickname = document.querySelector('#nickname').value.trim();
@@ -22,7 +25,7 @@ function connect(event) {
         usernamePage.classList.add('hidden');
         chatPage.classList.remove('hidden');
 
-        const socket = new SockJS('/ws');
+        const socket = new SockJS('/chat');
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, onConnected, onError);
@@ -31,23 +34,161 @@ function connect(event) {
 }
 
 
-function onConnected() {
+async function onConnected(options) {
     stompClient.subscribe(`/user/${nickname}/queue/messages`, onMessageReceived);
     stompClient.subscribe(`/user/public`, onMessageReceived);
 
+
+
+    const params = new URLSearchParams();
+    params.append("nickname", nickname);
+
+    const currentUserRes = await fetch(`/getUserByNickname?${params.toString()}`);
+    currentUser = await currentUserRes.json();
+
+    console.log(currentUser);
+
+    localStorage.setItem("nickname", nickname);
     // register the connected user
     stompClient.send("/app/user.addUser",
         {},
-        JSON.stringify({nickName: nickname, fullName: fullname, status: 'ONLINE'})
+        JSON.stringify({nickname: nickname, fullname: fullname, status: 'ONLINE'})
     );
     document.querySelector('#connected-user-fullname').textContent = fullname;
     findAndDisplayConnectedUsers().then();
+
+    // find and display groups
+    console.log("curr user id : " + currentUser.id);
+    const joinedRes = await fetch(`/groupChat/fetchJoinedGroups/${currentUser.id}`,{
+        method: 'POST'
+    });
+    const joinedGroups = await joinedRes.json();
+    // katılınmış tüm grup sohbetlerine abone olundu
+    joinedGroups.forEach(group => {
+        stompClient.subscribe(`/topic/groupChats.${group.id}`, (message) => {
+            const receivedMessage = JSON.parse(message.body);
+            console.log("Received Message for Group", group.id, ":", receivedMessage);
+        });
+    });
+
+
+
+
+   console.log("jg : ", joinedGroups);
+    // Grupları HTML'de göster
+    const groupsList = document.getElementById('groups');
+    groupsList.innerHTML = '';
+
+    joinedGroups.forEach(group => {
+        /*const groupItem = document.createElement('li');
+        groupItem.classList.add('group-item');
+        groupItem.id = group.id;
+        groupItem.textContent = group.name;*/
+
+        const listItem = document.createElement('li');
+        listItem.classList.add('group-item');
+        listItem.id = group.id;
+        listItem.name = group.name;
+
+        /*const userImage = document.createElement('img');
+        userImage.src = '../img/user_icon.png';*/
+
+
+        const groupnameSpan = document.createElement('span');
+        groupnameSpan.textContent = group.name;
+
+        const receivedMsgs = document.createElement('span');
+        receivedMsgs.textContent = '0';
+        receivedMsgs.classList.add('nbr-msg', 'hidden');
+
+        //listItem.appendChild(userImage);
+        listItem.appendChild(groupnameSpan);
+        listItem.appendChild(receivedMsgs);
+
+
+        listItem.addEventListener('click', groupItemClick);
+
+        groupsList.appendChild(listItem)
+
+    });
+}
+async function groupItemClick(event) {
+    const clickedGroup = event.currentTarget;
+    selectedGroupId = clickedGroup.id;
+    selectedUserId = "";
+
+
+    document.querySelectorAll('.group-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    messageForm.classList.remove('hidden');
+
+    clickedGroup.classList.add('active');
+
+    messageForm.classList.remove('hidden');
+
+    // Seçili gruba göre sohbet geçmişini getir
+    await fetchAndDisplayGroupChat();
+
+    // Diğer sohbet geçmişlerini temizle
+    chatArea.innerHTML = clickedGroup.name;
 }
 
+async function fetchAndDisplayGroupChat() {
+    if (!selectedGroupId) return;
+
+    const groupChatHistoryResponse = await fetch(`/groupChat/fetchGroupChatHistory/${selectedGroupId}`, {
+        method: 'POST'
+    });
+
+    console.log("groupChatHist : " ,groupChatHistoryResponse);
+
+    const groupChatHistory = await groupChatHistoryResponse.json();
+
+    console.log("groupChatHist : " , groupChatHistory);
+
+    groupChatHistory.forEach(chat => {
+        displayGroupMessage(chat.senderId, chat.content);
+    });
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+async function displayGroupMessage(senderId, content) {
+    const messageContainer = document.createElement('div');
+    messageContainer.classList.add('message');
+    if (senderId === currentUser.id) {
+        messageContainer.classList.add('sender');
+    } else {
+        messageContainer.classList.add('receiver');
+    }
+    const senderRes = await fetch(`getUserById/${senderId}`);
+    const sender = await senderRes.json()
+
+    const message = document.createElement('p');
+    const messageNickname = document.createElement("b");
+    const msgContent = document.createElement('p')
+    messageNickname.textContent = sender.nickname;
+    msgContent.textContent = content;
+
+    message.appendChild(messageNickname);
+    message.appendChild(document.createElement('br'));
+    message.appendChild(msgContent);
+
+
+
+
+    messageContainer.appendChild(message);
+    chatArea.appendChild(messageContainer);
+
+}
+
+
+
 async function findAndDisplayConnectedUsers() {
-    const connectedUsersResponse = await fetch('/users');
+    const connectedUsersResponse = await fetch('/allUsers');
     let connectedUsers = await connectedUsersResponse.json();
-    connectedUsers = connectedUsers.filter(user => user.nickName !== nickname);
+    console.log(connectedUsers)
+    connectedUsers = connectedUsers.filter(user => user.nickname !== nickname);
     const connectedUsersList = document.getElementById('connectedUsers');
     connectedUsersList.innerHTML = '';
 
@@ -64,14 +205,14 @@ async function findAndDisplayConnectedUsers() {
 function appendUserElement(user, connectedUsersList) {
     const listItem = document.createElement('li');
     listItem.classList.add('user-item');
-    listItem.id = user.nickName;
+    listItem.id = user.nickname;
 
     const userImage = document.createElement('img');
     userImage.src = '../img/user_icon.png';
-    userImage.alt = user.fullName;
+    userImage.alt = user.fullname;
 
     const usernameSpan = document.createElement('span');
-    usernameSpan.textContent = user.fullName;
+    usernameSpan.textContent = user.fullname;
 
     const receivedMsgs = document.createElement('span');
     receivedMsgs.textContent = '0';
@@ -136,16 +277,40 @@ function onError() {
 
 
 function sendMessage(event) {
+    if (!selectedUserId && selectedGroupId){
+        sendGroupMessage(event)
+        return;
+    }
+
     const messageContent = messageInput.value.trim();
     if (messageContent && stompClient) {
         const chatMessage = {
-            senderId: nickname,
+            senderId: nickname
+,
             recipientId: selectedUserId,
             content: messageInput.value.trim(),
             timestamp: new Date()
         };
         stompClient.send("/app/chat", {}, JSON.stringify(chatMessage));
-        displayMessage(nickname, messageInput.value.trim());
+        displayMessage(nickname
+, messageInput.value.trim());
+        messageInput.value = '';
+    }
+    chatArea.scrollTop = chatArea.scrollHeight;
+    event.preventDefault();
+}
+function sendGroupMessage(event) {
+    const messageContent = messageInput.value.trim();
+    if (messageContent && stompClient) {
+        const chatMessage = {
+            senderId: currentUser.id,
+            groupId: selectedGroupId,
+            content: messageInput.value.trim(),
+            timestamp: new Date()
+        };
+        stompClient.send("/app/groupChat", {}, JSON.stringify(chatMessage));
+        displayMessage(nickname
+            , messageInput.value.trim());
         messageInput.value = '';
     }
     chatArea.scrollTop = chatArea.scrollHeight;
@@ -179,10 +344,14 @@ async function onMessageReceived(payload) {
 function onLogout() {
     stompClient.send("/app/user.disconnectUser",
         {},
-        JSON.stringify({nickName: nickname, fullName: fullname, status: 'OFFLINE'})
+        JSON.stringify({nickname
+: nickname
+, fullname: fullname, status: 'OFFLINE'})
     );
     window.location.reload();
 }
+
+
 
 usernameForm.addEventListener('submit', connect, true); // step 1
 messageForm.addEventListener('submit', sendMessage, true);

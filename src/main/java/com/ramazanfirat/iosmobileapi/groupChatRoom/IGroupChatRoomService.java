@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface IGroupChatRoomService {
 
-  GroupChatRoom createGroupChatRoom(List<String> participantIds);
+  GroupChatRoom createGroupChatRoom(GroupChatRoom groupChatRoom);
 
   GroupChatRoom findGroupChatRoomById(String roomId);
 

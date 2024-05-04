@@ -11,12 +11,9 @@ public class GroupChatRoomService implements IGroupChatRoomService {
     private final GroupChatRoomRepository groupChatRoomRepository;
 
      @Override
-    public GroupChatRoom createGroupChatRoom(List<String> participantIds) {
-        GroupChatRoom groupChatRoom = GroupChatRoom.builder()
-            .participtians(participantIds)
-            .build();
-        groupChatRoomRepository.save(groupChatRoom);
-        return groupChatRoom;
+    public GroupChatRoom createGroupChatRoom(GroupChatRoom groupChatRoom) {
+         groupChatRoomRepository.save(groupChatRoom);
+         return groupChatRoom;
     }
 
     @Override
@@ -26,6 +23,7 @@ public class GroupChatRoomService implements IGroupChatRoomService {
 
     @Override
     public List<GroupChatRoom> findGroupChatRoomsByUserId(String userId) {
+
         return groupChatRoomRepository.findByParticiptiansContains(userId);
     }
 

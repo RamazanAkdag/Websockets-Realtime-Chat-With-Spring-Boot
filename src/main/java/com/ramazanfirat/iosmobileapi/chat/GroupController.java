@@ -1,30 +1,40 @@
 
-package com.ramazanfirat.iosmobileapi.groupChatRoom;
+package com.ramazanfirat.iosmobileapi.chat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramazanfirat.iosmobileapi.chat.groupChat.GroupChatMessage;
-import com.ramazanfirat.iosmobileapi.chat.groupChat.GroupChatMessageService;
 import com.ramazanfirat.iosmobileapi.chat.groupChat.IGroupChatMessageService;
 import com.ramazanfirat.iosmobileapi.groupChatRoom.GroupChatRoom;
 import com.ramazanfirat.iosmobileapi.groupChatRoom.IGroupChatRoomService;
 import java.util.List;
+import java.util.logging.Logger;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 
 
 @Controller
+@RestController
+@RequestMapping("/groupChat")
 @RequiredArgsConstructor
 public class GroupController {
+
+
+  Logger logger = Logger.getLogger(GroupController.class.getName());
 
   private final IGroupChatRoomService groupChatRoomService;
   private final IGroupChatMessageService GroupChatMessageService;
 
   @MessageMapping("/groupChat.createRoom")
   @SendTo("/groupChats")  // Tüm grup sohbetlerini dinleyen client'lara gönderilir
-  public GroupChatRoom createRoom(@Payload List<String> participantIds) {
-    return groupChatRoomService.createGroupChatRoom(participantIds);
+  public GroupChatRoom createRoom(@Payload GroupChatRoom groupChatRoom) {
+    System.out.println("create room");
+    return groupChatRoomService.createGroupChatRoom(groupChatRoom);
   }
 
   @MessageMapping("/groupChat.joinRoom")
@@ -45,15 +55,18 @@ public class GroupController {
     groupChatRoomService.deleteGroupChatRoom(roomId);
   }
 
-  @MessageMapping("/groupChat.fetchGroupChatHistory")
-  @SendTo("/user")  // İlgili kullanıcıya gönderilir
-  public List<GroupChatMessage> fetchGroupChatHistory(@Payload String roomId) {
-    return GroupChatMessageService.findGroupChatMessages(roomId);
+  @PostMapping("/fetchGroupChatHistory/{roomId}")
+  public List<GroupChatMessage> fetchGroupChatHistory(@PathVariable String roomId) {
+    var messages = GroupChatMessageService.findGroupChatMessages(roomId);
+    System.out.println(messages);
+    return messages;
   }
 
-  @MessageMapping("/groupChat.fetchJoinedGroups")
-  @SendTo("/user")  // İlgili kullanıcıya gönderilir
-  public List<GroupChatRoom> fetchJoinedGroups(@Payload String userId) {
-    return groupChatRoomService.findGroupChatRoomsByUserId(userId);
+  @PostMapping("/fetchJoinedGroups/{userId}")
+  public List<GroupChatRoom> fetchJoinedGroups(@PathVariable String userId) {
+    var list = groupChatRoomService.findGroupChatRoomsByUserId(userId);
+
+
+    return list;
   }
 }

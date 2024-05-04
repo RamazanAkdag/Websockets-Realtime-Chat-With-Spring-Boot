@@ -8,6 +8,7 @@ public class IosmobileapiApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(IosmobileapiApplication.class, args);
+
 	}
 
 }

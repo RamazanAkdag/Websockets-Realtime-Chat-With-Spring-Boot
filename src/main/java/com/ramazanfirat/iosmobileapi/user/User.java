@@ -20,7 +20,6 @@ public class User {
     @Id
     private String id;
 
-    @Indexed(unique = true)
     private String nickname;
     private String fullname;
     private Status status;

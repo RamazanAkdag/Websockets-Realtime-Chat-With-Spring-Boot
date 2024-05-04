@@ -1,8 +1,9 @@
 package com.ramazanfirat.iosmobileapi.user;
 
-import org.springframework.security.core.userdetails.UserDetailsService;
+
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IUserService {
 
@@ -14,4 +15,8 @@ public interface IUserService {
     public List<User> findConnectedUsers();
 
     public List<User> findAllUsers();
+
+    User findByNickname(String nickname);
+
+    Optional<User> findById(String id);
 }

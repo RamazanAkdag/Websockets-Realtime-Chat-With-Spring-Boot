@@ -47,20 +47,20 @@ public class ChatController {
 
     }
 
-   @MessageMapping("/groupChat")
+    @MessageMapping("/groupChat")
     public void processGroupChatMessage(
-        @Payload GroupChatMessage groupChatMessage
+            @Payload GroupChatMessage groupChatMessage
     ) {
         GroupChatMessage savedMessage = groupChatMessageService.save(groupChatMessage);
 
         // Grup sohbet mesajını tüm üyelere göndermek için
         messagingTemplate.convertAndSend("/topic/groupChats." + groupChatMessage.getGroupId(),
-            GroupChatNotification.builder()
-            .id(savedMessage.getId())
-            .senderId(savedMessage.getSenderId())
-            .groupId(savedMessage.getGroupId())
-            .content(savedMessage.getContent())
-            .build());
+                GroupChatNotification.builder()
+                        .id(savedMessage.getId())
+                        .senderId(savedMessage.getSenderId())
+                        .groupId(savedMessage.getGroupId())
+                        .content(savedMessage.getContent())
+                        .build());
     }
 
 

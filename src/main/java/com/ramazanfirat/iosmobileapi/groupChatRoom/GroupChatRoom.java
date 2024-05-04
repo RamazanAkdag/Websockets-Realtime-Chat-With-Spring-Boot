@@ -16,6 +16,7 @@ import java.util.List;
 public class GroupChatRoom {
     @Id
     private String id;
+    private String adminId;
     private String name;
     private List<String> participtians;
 
