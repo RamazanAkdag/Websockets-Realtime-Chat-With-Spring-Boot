@@ -19,4 +19,6 @@ public interface IUserService {
     User findByNickname(String nickname);
 
     Optional<User> findById(String id);
+
+    boolean existsByNickname(String nickname);
 }

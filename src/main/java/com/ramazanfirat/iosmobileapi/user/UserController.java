@@ -6,8 +6,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +25,11 @@ public class UserController {
         return user;
     }
 
+    @PostMapping("/user/add")
+    public User add(@RequestBody User user){
+        userService.saveUser(user);
+        return user;
+    }
     @MessageMapping("/user.disconnectUser")
     @SendTo("/user")
     public User disconnect(
@@ -35,8 +39,12 @@ public class UserController {
         return user;
     }
 
-    @GetMapping("/getUserByNickname")
-    public ResponseEntity<User> getbyid(String nickname){
+    @GetMapping("/checkUserByNickname/{nickname}")
+    public ResponseEntity<Boolean> checkUserByNickname(@PathVariable String nickname){
+        return ResponseEntity.ok(userService.existsByNickname(nickname));
+    }
+    @GetMapping("/getUserByNickname/{nickname}")
+    public ResponseEntity<User> getbyid(@PathVariable String nickname){
         return ResponseEntity.ok(userService.findByNickname(nickname));
     }
 

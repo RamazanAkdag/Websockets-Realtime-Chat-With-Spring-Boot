@@ -2,6 +2,7 @@ package com.ramazanfirat.iosmobileapi.user;
 
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService implements IUserService {
 
     private final UserRepository userRepository;
@@ -20,6 +22,7 @@ public class UserService implements IUserService {
             return;
         }
         userRepository.save(user);
+        log.info("kullanıcı kaydedildi : " , user.getNickname());
     }
 
     @Override
@@ -52,6 +55,11 @@ public class UserService implements IUserService {
     @Override
     public Optional<User> findById(String id) {
         return userRepository.findById(id);
+    }
+
+    @Override
+    public boolean existsByNickname(String nickname) {
+        return userRepository.existsByNickname(nickname);
     }
 
 

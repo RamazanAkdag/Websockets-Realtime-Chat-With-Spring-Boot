@@ -14,8 +14,10 @@
 	<name>iosmobileapi</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
-		<java.version>21</java.version>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
 	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -48,16 +50,7 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!--<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
 
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-test</artifactId>
-			<scope>test</scope>
-		</dependency>-->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
@@ -68,29 +61,8 @@
 			<artifactId>spring-messaging</artifactId>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api -->
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-api</artifactId>
-			<version>0.12.3</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl -->
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-impl</artifactId>
-			<version>0.12.3</version>
-			<scope>runtime</scope>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson -->
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-jackson</artifactId>
-			<version>0.12.3</version>
-			<scope>runtime</scope>
-		</dependency>
 
 
-		<!--Spring Security And Token Authentication-->
 
 	</dependencies>
 
